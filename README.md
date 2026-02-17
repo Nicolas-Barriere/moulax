@@ -1,87 +1,125 @@
 # Moulax
 
-Personal finance app — track transactions, manage accounts, and visualise spending.
+> Know where your money is. One dashboard, all accounts, zero fluff.
 
-| Component | Stack               | Directory |
-| --------- | -------------------- | --------- |
-| API       | Elixir / Phoenix     | `api/`    |
-| Frontend  | Next.js / React / TW | `web/`    |
-| Database  | PostgreSQL 17        | —         |
+Moulax is a self-hosted personal finance aggregator for tracking money across multiple bank accounts. Import CSV statements from your banks, categorize transactions, and see where your money goes — all in one clean dashboard.
 
-## Prerequisites
+## Tech Stack
 
-- [Docker](https://docs.docker.com/get-docker/) & Docker Compose v2+
-
-That's it. Everything else runs inside containers.
+| Layer    | Technology              |
+|----------|------------------------|
+| Frontend | Next.js 16, React 19, Tailwind CSS 4, Recharts |
+| Backend  | Elixir, Phoenix 1.7    |
+| Database | PostgreSQL 16          |
+| Infra    | Docker Compose         |
 
 ## Quick Start
 
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) (v2+)
+
+### Setup
+
 ```bash
 # Clone the repo
-git clone <repo-url> && cd moulax
+git clone https://github.com/Nicolas-Barriere/moulax.git
+cd moulax
 
-# Start all services (builds images on first run)
-make dev
+# (Optional) Copy and adjust port config if defaults conflict
+cp .env.example .env
+
+# Build and start everything
+make setup
 ```
 
-Once the containers are up:
+That's it. Once the containers are ready:
 
-| Service  | URL                          |
-| -------- | ---------------------------- |
-| Frontend | <http://localhost:3000>      |
-| API      | <http://localhost:4000>      |
-| Postgres | `localhost:5432` (user/pass: `postgres`/`postgres`) |
+- **Frontend:** [http://localhost:3000](http://localhost:3000)
+- **Backend API:** [http://localhost:4000/api/v1/health](http://localhost:4000/api/v1/health)
+- **Database:** `localhost:5434` (user: `postgres`, password: `postgres`)
 
-## Make Commands
+> **Port conflicts?** Edit `.env` to change `WEB_PORT`, `BACKEND_PORT`, or `DB_PORT`.
 
-Run `make help` for a full list. Highlights:
+### Common Commands
 
-| Command        | Description                                  |
-| -------------- | -------------------------------------------- |
-| `make dev`     | Start all services with hot reload           |
-| `make stop`    | Stop all services                            |
-| `make reset`   | Stop services and destroy volumes            |
-| `make logs`    | Tail logs from all services                  |
-| `make test`    | Run API tests                                |
-| `make shell-api` | Open a shell in the API container          |
-| `make shell-web` | Open a shell in the frontend container     |
-| `make db-console` | Open a psql console                       |
-| `make db-migrate` | Run Ecto migrations                       |
-| `make db-reset`   | Drop, create, migrate, and seed the DB    |
-
-## Project Layout
+Run `make help` to see all available commands:
 
 ```
-├── api/                 # Elixir Phoenix API (port 4000)
-│   ├── config/
+clean                Stop services and remove all volumes (fresh start)
+db.migrate           Run pending database migrations
+db.reset             Drop, create, and migrate the database
+db.seed              Run database seeds
+dev                  Start all services (build if needed)
+dev.logs             Start all services with logs in foreground
+help                 Show this help
+logs                 Follow logs from all services
+logs.backend         Follow backend logs only
+logs.db              Follow database logs only
+logs.web             Follow frontend logs only
+restart              Restart all services
+setup                Build and start all services for the first time
+shell.backend        Open an IEx shell in the backend container
+shell.db             Open psql in the database container
+shell.web            Open a shell in the frontend container
+stop                 Stop all services
+test                 Run all tests
+test.backend         Run backend (Elixir) tests
+test.web             Run frontend (Next.js) linter
+```
+
+### Developing Without Docker
+
+If you prefer running services natively:
+
+**Backend (Elixir):**
+```bash
+cd backend
+mix deps.get
+mix ecto.setup        # requires PostgreSQL running locally
+mix phx.server        # starts on port 4000
+```
+
+**Frontend (Next.js):**
+```bash
+cd web
+pnpm install
+pnpm dev              # starts on port 3000
+```
+
+## Project Structure
+
+```
+moulax/
+├── backend/              # Elixir Phoenix API
 │   ├── lib/
-│   ├── priv/
-│   ├── test/
-│   ├── Dockerfile.dev
-│   └── mix.exs
-├── web/                 # Next.js frontend (port 3000)
+│   │   ├── moulax/       # Business logic (contexts)
+│   │   └── moulax_web/   # HTTP layer (controllers, router)
+│   ├── config/           # Environment configs
+│   ├── priv/repo/        # Migrations and seeds
+│   ├── test/             # Backend tests
+│   ├── mix.exs           # Elixir dependencies
+│   └── Dockerfile
+├── web/                  # Next.js frontend
 │   ├── src/
-│   ├── Dockerfile.dev
-│   └── package.json
-├── docker-compose.yml
-├── Makefile
+│   │   ├── app/          # Pages (App Router)
+│   │   ├── components/   # Shared UI components
+│   │   ├── lib/          # API client, utilities
+│   │   └── types/        # TypeScript type definitions
+│   ├── package.json
+│   └── Dockerfile
+├── docker-compose.yml    # Full stack orchestration
+├── Makefile              # Developer commands
+├── V1_SPEC.md            # Detailed product specification
 └── README.md
 ```
 
-## Development Without Docker
+## Supported Banks (CSV Import)
 
-If you prefer running services natively, install the versions listed in `.tool-versions` (via [asdf](https://asdf-vm.com/) or [mise](https://mise.jdx.dev/)):
+- Boursorama (checking + savings)
+- Revolut
+- Caisse d'Épargne
 
-```bash
-# API
-cd api
-mix setup        # install deps, create DB, run migrations
-mix phx.server   # start on :4000
+## License
 
-# Frontend
-cd web
-pnpm install
-pnpm dev         # start on :3000
-```
-
-You'll need a local PostgreSQL instance running with user `postgres` / password `postgres`.
+Private project.
