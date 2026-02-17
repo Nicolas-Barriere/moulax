@@ -7,7 +7,6 @@ erl_crash.dump
 
 # Mix
 /.fetch
-mix.lock
 
 # Dialyzer
 /priv/plts/
