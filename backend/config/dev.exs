@@ -14,7 +14,8 @@ config :moulax, MoulaxWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "dev_only_secret_key_base_that_is_at_least_64_bytes_long_for_phoenix_dev_mode_ok",
+  secret_key_base:
+    "dev_only_secret_key_base_that_is_at_least_64_bytes_long_for_phoenix_dev_mode_ok",
   watchers: []
 
 config :logger, :console, format: "[$level] $message\n"

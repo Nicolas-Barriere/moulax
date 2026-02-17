@@ -2,7 +2,7 @@ import Config
 
 config :moulax,
   ecto_repos: [Moulax.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime, binary_id: true]
 
 config :moulax, MoulaxWeb.Endpoint,
   url: [host: "localhost"],
