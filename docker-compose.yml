@@ -18,17 +18,17 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./api
+      dockerfile: Dockerfile.dev
     restart: unless-stopped
     ports:
-      - "${BACKEND_PORT:-4000}:4000"
+      - "${BACKEND_PORT:-4001}:4000"
     environment:
       MIX_ENV: dev
-      DATABASE_HOST: db
+      DB_HOST: db
       PHX_HOST: localhost
     volumes:
-      - ./backend:/app
+      - ./api:/app
       - backend_deps:/app/deps
       - backend_build:/app/_build
     depends_on:
@@ -40,12 +40,12 @@ services:
   web:
     build:
       context: ./web
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     restart: unless-stopped
     ports:
-      - "${WEB_PORT:-3000}:3000"
+      - "${WEB_PORT:-3005}:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-4000}/api/v1
+      NEXT_PUBLIC_API_URL: http://localhost:${BACKEND_PORT:-4001}/api/v1
       NEXT_TELEMETRY_DISABLED: 1
       HOSTNAME: 0.0.0.0
     volumes:
