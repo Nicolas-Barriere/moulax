@@ -9,8 +9,13 @@ defmodule Moulax.Parsers.BoursoramaTest do
   defp fixture(name), do: File.read!(Path.join(@fixtures_path, name))
 
   describe "detect?/1" do
-    test "returns true for Boursorama CSV" do
+    test "returns true for BoursoBank CSV" do
       assert Boursorama.detect?(fixture("boursorama_valid.csv"))
+    end
+
+    test "returns true for legacy Boursorama CSV without quotes" do
+      legacy = "dateOp;dateVal;label;amount\n2026-02-10;2026-02-10;CARTE 10/02 SHOP;-10,00\n"
+      assert Boursorama.detect?(legacy)
     end
 
     test "returns false for Revolut CSV" do
@@ -27,36 +32,48 @@ defmodule Moulax.Parsers.BoursoramaTest do
   end
 
   describe "parse/1" do
-    test "parses a valid Boursorama CSV" do
+    test "parses a valid BoursoBank CSV with quoted fields" do
       assert {:ok, transactions} = Boursorama.parse(fixture("boursorama_valid.csv"))
       assert length(transactions) == 4
 
       [first | _] = transactions
       assert first.date == ~D[2026-02-10]
-      assert first.original_label == "CARTE 10/02 CARREFOUR"
-      assert first.label == "CARREFOUR"
+      assert first.original_label == "Carrefour | CARTE 10/02/26 CARREFOUR CB*1234"
+      assert first.label == "Carrefour"
       assert first.amount == Decimal.new("-45.32")
       assert first.currency == "EUR"
     end
 
-    test "parses VIR SEPA label correctly" do
+    test "extracts supplier name from pipe-separated label" do
       assert {:ok, transactions} = Boursorama.parse(fixture("boursorama_valid.csv"))
-      vir = Enum.find(transactions, &(&1.original_label == "VIR SEPA EMPLOYEUR"))
 
-      assert vir.label == "EMPLOYEUR"
+      vir = Enum.find(transactions, &String.contains?(&1.original_label, "VIR SEPA"))
+      assert vir.label == "Employeur SA"
       assert vir.amount == Decimal.new("2500.00")
     end
 
     test "handles comma as decimal separator" do
       assert {:ok, transactions} = Boursorama.parse(fixture("boursorama_valid.csv"))
       first = List.first(transactions)
-
       assert first.amount == Decimal.new("-45.32")
+    end
+
+    test "parses legacy Boursorama format without quotes" do
+      legacy =
+        "dateOp;dateVal;label;category;categoryParent;supplierFound;amount;accountNum;accountLabel;accountBalance\n" <>
+          "2026-02-10;2026-02-10;CARTE 10/02 CARREFOUR;;;;-45,32;;;\n" <>
+          "2026-02-09;2026-02-09;VIR SEPA EMPLOYEUR;;;;2500.00;;;\n"
+
+      assert {:ok, [first, second]} = Boursorama.parse(legacy)
+      assert first.original_label == "CARTE 10/02 CARREFOUR"
+      assert first.label == "CARREFOUR"
+      assert second.original_label == "VIR SEPA EMPLOYEUR"
+      assert second.label == "EMPLOYEUR"
     end
 
     test "returns empty list for header-only CSV" do
       header =
-        "dateOp;dateVal;label;category;categoryParent;supplierFound;amount;accountNum;accountLabel;accountBalance\n"
+        "dateOp;dateVal;label;category;categoryParent;supplierFound;amount;comment;accountNum;accountLabel;accountbalance\n"
 
       assert {:ok, []} = Boursorama.parse(header)
     end
@@ -108,7 +125,7 @@ defmodule Moulax.Parsers.BoursoramaTest do
 
     test "handles Latin-1 encoded content" do
       latin1 =
-        "dateOp;dateVal;label;category;categoryParent;supplierFound;amount;accountNum;accountLabel;accountBalance\n2026-02-10;2026-02-10;CARTE 10/02 CAF\xE9;;;;-10,00;;;\n"
+        "dateOp;dateVal;label;amount\n2026-02-10;2026-02-10;CARTE 10/02 CAF\xE9;-10,00\n"
 
       assert {:ok, [txn]} = Boursorama.parse(latin1)
       assert txn.original_label =~ "CAF"
@@ -116,9 +133,23 @@ defmodule Moulax.Parsers.BoursoramaTest do
   end
 
   describe "clean_label/1" do
-    test "strips CARTE DD/MM prefix" do
+    test "extracts supplier from BoursoBank pipe format" do
+      assert Boursorama.clean_label("Carrefour | CARTE 10/02/26 CARREFOUR CB*1234") ==
+               "Carrefour"
+
+      assert Boursorama.clean_label("YouTube | CARTE 15/01/26 Google YouTube Su CB*5935") ==
+               "YouTube"
+
+      assert Boursorama.clean_label("Vir Cheh | VIR Cheh") == "Vir Cheh"
+    end
+
+    test "strips CARTE DD/MM prefix (legacy format)" do
       assert Boursorama.clean_label("CARTE 10/02 CARREFOUR") == "CARREFOUR"
       assert Boursorama.clean_label("CARTE 31/12 FNAC") == "FNAC"
+    end
+
+    test "strips CARTE DD/MM/YY prefix" do
+      assert Boursorama.clean_label("CARTE 10/02/26 CARREFOUR CB*1234") == "CARREFOUR"
     end
 
     test "strips VIR SEPA prefix" do
@@ -127,6 +158,10 @@ defmodule Moulax.Parsers.BoursoramaTest do
 
     test "strips VIREMENT SEPA prefix" do
       assert Boursorama.clean_label("VIREMENT SEPA REMBOURSEMENT") == "REMBOURSEMENT"
+    end
+
+    test "strips CB*XXXX suffix" do
+      assert Boursorama.clean_label("CARTE 10/02/26 SOME SHOP CB*5935") == "SOME SHOP"
     end
 
     test "leaves other labels unchanged" do
