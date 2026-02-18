@@ -12,9 +12,9 @@ setup: ## Build and start all services for the first time
 	docker compose up -d
 	@echo ""
 	@echo "✓ Moulax is starting up!"
-	@echo "  Frontend:  http://localhost:3000"
-	@echo "  Backend:   http://localhost:4000"
-  @echo "  Database:  localhost:$${DB_PORT:-5434}"
+	@echo "  Frontend:  http://localhost:$${WEB_PORT:-3005}"
+	@echo "  Backend:   http://localhost:$${BACKEND_PORT:-4001}"
+	@echo "  Database:  localhost:$${DB_PORT:-5434}"
 	@echo ""
 	@echo "Run 'make logs' to follow the logs."
 
@@ -24,8 +24,8 @@ dev: ## Start all services (build if needed)
 	docker compose up -d --build
 	@echo ""
 	@echo "✓ Moulax is running!"
-	@echo "  Frontend:  http://localhost:3000"
-	@echo "  Backend:   http://localhost:4000"
+	@echo "  Frontend:  http://localhost:$${WEB_PORT:-3005}"
+	@echo "  Backend:   http://localhost:$${BACKEND_PORT:-4001}"
 
 dev.logs: ## Start all services with logs in foreground
 	docker compose up --build

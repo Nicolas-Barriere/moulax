@@ -17,4 +17,4 @@ COPY . .
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "mix ecto.setup && mix phx.server"]
+CMD ["sh", "-c", "mix deps.get && mix ecto.setup && mix phx.server"]
