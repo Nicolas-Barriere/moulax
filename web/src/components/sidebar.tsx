@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Tableau de bord", icon: LayoutDashboardIcon },
@@ -14,13 +14,7 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const prevPathname = useRef(pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  if (prevPathname.current !== pathname) {
-    prevPathname.current = pathname;
-    if (mobileOpen) setMobileOpen(false);
-  }
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -87,6 +81,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-primary/10 text-primary"
