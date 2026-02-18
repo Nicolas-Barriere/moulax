@@ -1,5 +1,5 @@
-dateOp;dateVal;label;category;categoryParent;supplierFound;amount;accountNum;accountLabel;accountBalance
-2026-02-10;2026-02-10;CARTE 10/02 CARREFOUR;;;;-45,32;;;
-2026-02-09;2026-02-09;VIR SEPA EMPLOYEUR;;;;2500.00;;;
-2026-02-08;2026-02-08;CARTE 08/02 RESTAURANT LE PETIT PARIS;;;;-32,50;;;
-2026-02-07;2026-02-07;PRLV SEPA FREE MOBILE;;;;-19,99;;;
+dateOp;dateVal;label;category;categoryParent;supplierFound;amount;comment;accountNum;accountLabel;accountbalance
+2026-02-10;2026-02-10;"Carrefour | CARTE 10/02/26 CARREFOUR CB*1234";"Alimentation";"Alimentation & Restauration";"carrefour";-45,32;;00012345678;BoursoBank;1500.00
+2026-02-09;2026-02-09;"Employeur SA | VIR SEPA EMPLOYEUR SA";"Virements reçus";"Virements reçus";"employeur";2500,00;;00012345678;BoursoBank;1545.32
+2026-02-08;2026-02-08;"Le Petit Paris | CARTE 08/02/26 RESTAURANT LE PETIT PARIS CB*1234";"Restauration";"Alimentation & Restauration";"restaurant le petit paris";-32,50;;00012345678;BoursoBank;-954.68
+2026-02-07;2026-02-07;"Free | PRLV SEPA FREE MOBILE";"Abonnements";"Abonnements & téléphonie";"free mobile";-19,99;;00012345678;BoursoBank;-922.18

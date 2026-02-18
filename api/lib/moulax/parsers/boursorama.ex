@@ -1,9 +1,13 @@
 defmodule Moulax.Parsers.Boursorama do
   @moduledoc """
-  CSV parser for Boursorama bank exports.
+  CSV parser for Boursorama / BoursoBank exports.
 
   Expected format: semicolon-separated with headers including
   `dateOp`, `dateVal`, `label`, `amount`, among others.
+  Fields may be quoted with double quotes.
+
+  Supports both legacy Boursorama exports and the newer BoursoBank format
+  which uses `"Supplier | Raw description"` labels.
   """
 
   @behaviour Moulax.Parsers.Parser
@@ -62,7 +66,14 @@ defmodule Moulax.Parsers.Boursorama do
     |> List.first()
   end
 
-  defp split_row(line), do: String.split(line, ";")
+  defp split_row(line) do
+    line
+    |> String.split(";")
+    |> Enum.map(&strip_quotes/1)
+  end
+
+  defp strip_quotes("\"" <> rest), do: String.trim_trailing(rest, "\"")
+  defp strip_quotes(field), do: field
 
   defp column_index_map(headers) do
     headers
@@ -157,15 +168,24 @@ defmodule Moulax.Parsers.Boursorama do
     do: {:ok, String.trim(label)}
 
   @doc """
-  Strips common Boursorama prefixes from transaction labels.
+  Extracts a clean merchant/supplier name from transaction labels.
 
-  Removes patterns like "CARTE DD/MM", "VIR SEPA", "VIREMENT SEPA".
+  For BoursoBank format (`"Supplier | Raw description"`), returns the supplier part.
+  For legacy Boursorama format, strips prefixes like "CARTE DD/MM", "VIR SEPA",
+  and suffixes like "CB*XXXX".
   """
   def clean_label(label) do
-    label
-    |> String.replace(~r/^CARTE \d{2}\/\d{2}\s*/, "")
-    |> String.replace(~r/^VIR(EMENT)? SEPA\s*/i, "")
-    |> String.trim()
+    case String.split(label, " | ", parts: 2) do
+      [supplier, _raw] ->
+        String.trim(supplier)
+
+      [single] ->
+        single
+        |> String.replace(~r/^CARTE \d{2}\/\d{2}(\/\d{2})?\s*/, "")
+        |> String.replace(~r/^VIR(EMENT)? SEPA\s*/i, "")
+        |> String.replace(~r/\s+CB\*\d+\s*$/, "")
+        |> String.trim()
+    end
   end
 
   defp normalize_encoding(content) do

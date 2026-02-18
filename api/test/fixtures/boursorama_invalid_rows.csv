@@ -1,4 +1,4 @@
-dateOp;dateVal;label;category;categoryParent;supplierFound;amount;accountNum;accountLabel;accountBalance
-not-a-date;2026-02-10;CARTE 10/02 CARREFOUR;;;;-45,32;;;
-2026-02-09;2026-02-09;;;;;not-a-number;;;
-2026-02-08;2026-02-08;;;;;-32,50;;;
+dateOp;dateVal;label;category;categoryParent;supplierFound;amount;comment;accountNum;accountLabel;accountbalance
+not-a-date;2026-02-10;"Carrefour | CARTE 10/02/26 CARREFOUR CB*1234";"Alimentation";"Alimentation & Restauration";"carrefour";-45,32;;00012345678;BoursoBank;1500.00
+2026-02-09;2026-02-09;"Shop | CARTE 09/02/26 SHOP CB*1234";"Cat";"ParentCat";"shop";not-a-number;;00012345678;BoursoBank;1545.32
+2026-02-08;2026-02-08;;;;;-32,50;;00012345678;BoursoBank;-954.68
