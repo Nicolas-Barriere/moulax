@@ -22,6 +22,7 @@ defmodule MoulaxWeb.Router do
     resources "/imports", ImportController, only: [:show]
 
     resources "/categorization-rules", CategorizationRuleController, except: [:new, :edit]
+    post "/categorization-rules/apply", CategorizationRuleController, :apply
 
     get "/dashboard/summary", DashboardController, :summary
     get "/dashboard/spending", DashboardController, :spending

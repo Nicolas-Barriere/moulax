@@ -69,6 +69,16 @@ defmodule MoulaxWeb.CategorizationRuleController do
     end
   end
 
+  @doc """
+  POST /api/v1/categorization-rules/apply — Apply rules to uncategorized transactions.
+  """
+  def apply(conn, _params) do
+    case Rules.apply_rules_to_uncategorized() do
+      {:ok, count} ->
+        json(conn, %{categorized_count: count})
+    end
+  end
+
   defp map_params_to_attrs(params) do
     params
     |> Map.take(["keyword", "category_id", "priority"])
