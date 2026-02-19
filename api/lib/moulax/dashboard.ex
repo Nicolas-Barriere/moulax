@@ -121,10 +121,8 @@ defmodule Moulax.Dashboard do
 
     by_category =
       Enum.map(by_category_raw, fn cat ->
-        # coveralls-ignore-next-line
         pct =
           if Decimal.eq?(abs_total, Decimal.new(0)) do
-            # coveralls-ignore-next-line
             0.0
           else
             Decimal.div(Decimal.abs(cat.amount), abs_total)
@@ -284,14 +282,11 @@ defmodule Moulax.Dashboard do
     "#{date.year}-#{m}"
   end
 
-  # coveralls-ignore-next-line
   defp format_decimal(nil), do: "0"
   defp format_decimal(%Decimal{} = d), do: Decimal.to_string(d, :normal)
-  # coveralls-ignore-next-line
   defp format_decimal(other), do: to_string(other)
 
   defp format_datetime(nil), do: nil
   defp format_datetime(%NaiveDateTime{} = dt), do: NaiveDateTime.to_iso8601(dt) <> "Z"
-  # coveralls-ignore-next-line
   defp format_datetime(%DateTime{} = dt), do: DateTime.to_iso8601(dt)
 end

@@ -119,7 +119,6 @@ defmodule Moulax.Parsers.Boursorama do
 
   defp field_at(fields, col_map, name) do
     case Map.get(col_map, name) do
-      # coveralls-ignore-next-line
       nil -> nil
       idx -> Enum.at(fields, idx)
     end

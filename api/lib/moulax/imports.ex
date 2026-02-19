@@ -206,9 +206,7 @@ defmodule Moulax.Imports do
     }
   end
 
-  # coveralls-ignore-next-line
   defp format_datetime(nil), do: nil
   defp format_datetime(%NaiveDateTime{} = dt), do: NaiveDateTime.to_iso8601(dt) <> "Z"
-  # coveralls-ignore-next-line
   defp format_datetime(%DateTime{} = dt), do: DateTime.to_iso8601(dt)
 end
