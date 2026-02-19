@@ -105,10 +105,46 @@ defmodule Moulax.Categories.Rules do
     end)
   end
 
+  @doc """
+  Applies all rules to transactions that currently have no category.
+  Returns `{:ok, categorized_count}`.
+  """
+  def apply_rules_to_uncategorized do
+    # 1. Fetch all uncategorized transactions
+    uncategorized =
+      Moulax.Transactions.Transaction
+      |> where([t], is_nil(t.category_id))
+      |> Repo.all()
+
+    # 2. Iterate and apply rules
+    # To avoid N+1 and be more efficient, we could do it in bulk,
+    # but for V1 we can just iterate, find the match, and update.
+    # To be a bit faster, we can group updates or use Repo.update_all for each rule,
+    # but since rules are substring matches in Elixir, the Elixir loop is easier to write safely.
+
+    updates =
+      uncategorized
+      |> Enum.map(fn t -> {t, match_category(t.label)} end)
+      |> Enum.reject(fn {_t, cat_id} -> is_nil(cat_id) end)
+
+    # 3. Apply updates
+    # We could do a transaction, but let's just run them and count
+    count =
+      Enum.reduce(updates, 0, fn {t, cat_id}, acc ->
+        case Moulax.Transactions.update_transaction(t, %{"category_id" => cat_id}) do
+          {:ok, _} -> acc + 1
+          _ -> acc
+        end
+      end)
+
+    {:ok, count}
+  end
+
   defp rule_to_response(%CategorizationRule{category: %Category{} = cat} = rule) do
     %{
       id: rule.id,
       keyword: rule.keyword,
+      category_id: rule.category_id,
       category: %{
         id: cat.id,
         name: cat.name,
