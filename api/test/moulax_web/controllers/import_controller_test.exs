@@ -86,6 +86,34 @@ defmodule MoulaxWeb.ImportControllerTest do
       assert data["errors"]["detail"] == "No CSV file provided"
     end
 
+    test "returns 400 when uploaded file cannot be read", %{conn: conn, account: account} do
+      upload = %Plug.Upload{
+        path: Path.join(System.tmp_dir!(), "missing_#{System.unique_integer([:positive])}.csv"),
+        filename: "missing.csv",
+        content_type: "text/csv"
+      }
+
+      conn = post(conn, ~p"/api/v1/accounts/#{account.id}/imports", %{"file" => upload})
+      data = json_response(conn, 400)
+
+      assert data["errors"]["detail"] == "No CSV file provided"
+    end
+
+    test "returns 422 when upload metadata is invalid", %{conn: conn, account: account} do
+      csv_path = Path.join([__DIR__, "..", "..", "fixtures", "boursorama_valid.csv"])
+
+      upload = %Plug.Upload{
+        path: csv_path,
+        filename: nil,
+        content_type: "text/csv"
+      }
+
+      conn = post(conn, ~p"/api/v1/accounts/#{account.id}/imports", %{"file" => upload})
+      data = json_response(conn, 422)
+
+      assert "can't be blank" in data["errors"]["filename"]
+    end
+
     test "returns 404 when account does not exist", %{conn: conn} do
       csv_path = Path.join([__DIR__, "..", "..", "fixtures", "boursorama_valid.csv"])
 
