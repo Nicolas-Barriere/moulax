@@ -61,8 +61,65 @@ jobs:
       - name: Check formatting
         run: mix format --check-formatted
 
-      - name: Run tests
-        run: mix test
+      - name: Run tests with coverage
+        run: mix coveralls.json
+
+      - name: Publish backend coverage summary
+        shell: bash
+        run: |
+          coverage_file="cover/excoveralls.json"
+
+          if [ ! -f "$coverage_file" ]; then
+            echo "Coverage file not found at $coverage_file" >&2
+            exit 1
+          fi
+
+          read -r total_covered total_tracked total_pct < <(
+            jq -r '
+              [ .source_files[]?.coverage[]? | select(. != null) ] as $tracked
+              | [ .source_files[]?.coverage[]? | select(type == "number" and . > 0) ] as $covered
+              | ($tracked | length) as $tracked_count
+              | ($covered | length) as $covered_count
+              | if $tracked_count == 0 then
+                  "0 0 0.00"
+                else
+                  "\($covered_count) \($tracked_count) \((10000 * $covered_count / $tracked_count | round) / 100)"
+                end
+            ' "$coverage_file"
+          )
+
+          {
+            echo "## Backend coverage"
+            echo
+            echo "| Module | Covered lines | Total lines | Coverage |"
+            echo "| --- | ---: | ---: | ---: |"
+            jq -r '
+              def totals:
+                [ .coverage[]? | select(. != null) ] as $tracked
+                | [ .coverage[]? | select(type == "number" and . > 0) ] as $covered
+                | {
+                    tracked: ($tracked | length),
+                    covered: ($covered | length)
+                  };
+              .source_files
+              | map(
+                  . as $source
+                  | ($source | totals) as $line_totals
+                  | select($line_totals.tracked > 0)
+                  | {
+                      name: $source.name,
+                      covered: $line_totals.covered,
+                      tracked: $line_totals.tracked,
+                      pct: ((10000 * $line_totals.covered / $line_totals.tracked | round) / 100)
+                    }
+                )
+              | sort_by(.name)
+              | .[]
+              | "| \(.name) | \(.covered) | \(.tracked) | \(.pct)% |"
+            ' "$coverage_file"
+            echo
+            echo "**Total:** ${total_covered}/${total_tracked} (${total_pct}%)"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   web:
     name: Web
