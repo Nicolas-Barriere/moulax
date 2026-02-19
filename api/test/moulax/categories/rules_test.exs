@@ -98,6 +98,37 @@ defmodule Moulax.Categories.RulesTest do
       assert updated.category.name == "Health"
       assert updated.category.color == "#ef4444"
     end
+
+    test "updates only keyword and keeps category payload preloaded" do
+      cat = insert_category(%{name: "Bills", color: "#64748b"})
+      rule = insert_rule(%{keyword: "EDF", category_id: cat.id, priority: 1})
+
+      assert {:ok, updated} = Rules.update_rule(rule, %{keyword: "ENGIE"})
+
+      assert updated.keyword == "ENGIE"
+      assert updated.category.id == cat.id
+      assert updated.category.name == "Bills"
+      assert updated.category.color == "#64748b"
+    end
+  end
+
+  describe "get_rule/1" do
+    test "returns formatted rule with category when found" do
+      cat = insert_category(%{name: "Phone", color: "#8b5cf6"})
+      rule = insert_rule(%{keyword: "FREE", category_id: cat.id, priority: 4})
+
+      assert {:ok, got} = Rules.get_rule(rule.id)
+      assert got.id == rule.id
+      assert got.keyword == "FREE"
+      assert got.priority == 4
+      assert got.category.id == cat.id
+      assert got.category.name == "Phone"
+      assert got.category.color == "#8b5cf6"
+    end
+
+    test "returns not_found when missing" do
+      assert {:error, :not_found} = Rules.get_rule(Ecto.UUID.generate())
+    end
   end
 
   describe "delete_rule/1" do
