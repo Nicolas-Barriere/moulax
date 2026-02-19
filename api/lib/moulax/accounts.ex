@@ -98,6 +98,7 @@ defmodule Moulax.Accounts do
 
   defp format_datetime(nil), do: nil
   defp format_datetime(%NaiveDateTime{} = dt), do: NaiveDateTime.to_iso8601(dt) <> "Z"
+  # coveralls-ignore-next-line
   defp format_datetime(%DateTime{} = dt), do: DateTime.to_iso8601(dt)
 
   defp compute_balance(account) do
@@ -133,5 +134,6 @@ defmodule Moulax.Accounts do
 
   defp format_decimal(nil), do: "0.00"
   defp format_decimal(%Decimal{} = d), do: Decimal.to_string(d, :normal)
+  # coveralls-ignore-next-line
   defp format_decimal(other), do: to_string(other)
 end

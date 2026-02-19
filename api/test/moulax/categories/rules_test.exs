@@ -65,6 +65,14 @@ defmodule Moulax.Categories.RulesTest do
       assert updated.keyword == "TGV"
       assert updated.priority == 20
     end
+
+    test "returns changeset error when data is invalid" do
+      cat = insert_category(%{name: "Transport", color: "#3b82f6"})
+      rule = insert_rule(%{keyword: "SNCF", category_id: cat.id, priority: 5})
+
+      assert {:error, changeset} = Rules.update_rule(rule, %{keyword: nil})
+      assert %{keyword: [_]} = errors_on(changeset)
+    end
   end
 
   describe "delete_rule/1" do
@@ -78,6 +86,14 @@ defmodule Moulax.Categories.RulesTest do
 
     test "returns not_found when id does not exist" do
       assert {:error, :not_found} = Rules.delete_rule(Ecto.UUID.generate())
+    end
+
+    test "deletes by struct" do
+      cat = insert_category(%{name: "Other", color: "#6b7280"})
+      rule = insert_rule(%{keyword: "Y", category_id: cat.id, priority: 0})
+
+      assert {:ok, _} = Rules.delete_rule(rule)
+      assert Rules.list_rules() == []
     end
   end
 

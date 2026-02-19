@@ -90,6 +90,17 @@ defmodule MoulaxWeb.CategorizationRuleControllerTest do
       conn = put(conn, ~p"/api/v1/categorization-rules/#{Ecto.UUID.generate()}", @update_attrs)
       assert json_response(conn, 404)["errors"]["detail"] == "Not Found"
     end
+
+    test "renders 422 when data is invalid", %{conn: conn, category: cat} do
+      rule = insert_rule(%{keyword: "SNCF", category_id: cat.id, priority: 5})
+
+      conn =
+        put(conn, ~p"/api/v1/categorization-rules/#{rule.id}", %{
+          "category_id" => Ecto.UUID.generate()
+        })
+
+      assert json_response(conn, 422)["errors"] != %{}
+    end
   end
 
   describe "delete" do

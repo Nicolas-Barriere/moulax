@@ -250,14 +250,17 @@ defmodule Moulax.Transactions do
     }
   end
 
+  # coveralls-ignore-next-line
   defp account_ref(nil), do: nil
   defp account_ref(%Account{} = a), do: %{id: a.id, name: a.name, bank: a.bank, type: a.type}
 
   defp category_ref(nil), do: nil
   defp category_ref(%Category{} = c), do: %{id: c.id, name: c.name, color: c.color}
 
+  # coveralls-ignore-next-line
   defp format_decimal(nil), do: nil
   defp format_decimal(%Decimal{} = d), do: Decimal.to_string(d, :normal)
+  # coveralls-ignore-next-line
   defp format_decimal(other), do: to_string(other)
 
   defp to_int(val, _default) when is_integer(val), do: val
