@@ -153,6 +153,23 @@ defmodule MoulaxWeb.TransactionControllerTest do
       conn = put(conn, ~p"/api/v1/transactions/#{Ecto.UUID.generate()}", %{"label" => "X"})
       assert json_response(conn, 404)["errors"]["detail"] == "Not Found"
     end
+
+    test "returns 422 when update payload is invalid", %{conn: conn, account: account} do
+      tx =
+        insert_transaction(%{
+          account_id: account.id,
+          date: ~D[2026-02-01],
+          label: "Old",
+          amount: Decimal.new("-10")
+        })
+
+      conn =
+        put(conn, ~p"/api/v1/transactions/#{tx.id}", %{
+          "category_id" => Ecto.UUID.generate()
+        })
+
+      assert json_response(conn, 422)["errors"] != %{}
+    end
   end
 
   describe "bulk_categorize PATCH /api/v1/transactions/bulk-categorize" do

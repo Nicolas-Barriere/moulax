@@ -191,6 +191,39 @@ defmodule Moulax.ImportsTest do
       assert result.rows_total == 0
       assert result.rows_imported == 0
     end
+
+    test "returns parsing details when parser reports row errors", %{account: account} do
+      csv = File.read!(Path.join([__DIR__, "..", "fixtures", "boursorama_invalid_rows.csv"]))
+      {:ok, import_record} = Imports.create_import(account.id, "invalid_rows.csv")
+
+      assert {:error, result} = Imports.process_import(import_record, csv)
+
+      assert result.status == "failed"
+      assert result.rows_total == 0
+
+      assert [%{"row" => 0, "message" => "CSV parsing failed"} | parser_errors] =
+               result.error_details
+
+      assert Enum.any?(parser_errors, &(&1["message"] =~ "invalid date"))
+      assert Enum.any?(parser_errors, &(&1["row"] > 0))
+    end
+
+    test "counts row insertion validation failures as errored rows", %{account: account} do
+      csv = File.read!(Path.join([__DIR__, "..", "fixtures", "boursorama_valid.csv"]))
+      {:ok, %Import{} = import_record} = Imports.create_import(account.id, "bad_account.csv")
+
+      tampered_import = %Import{import_record | account_id: Ecto.UUID.generate()}
+
+      assert {:ok, result} = Imports.process_import(tampered_import, csv)
+
+      assert result.status == "completed"
+      assert result.rows_total == 4
+      assert result.rows_imported == 0
+      assert result.rows_skipped == 0
+      assert result.rows_errored == 4
+      assert length(result.error_details) == 4
+      assert Enum.any?(result.error_details, &String.contains?(&1["message"], "account_id"))
+    end
   end
 
   describe "get_import/1" do

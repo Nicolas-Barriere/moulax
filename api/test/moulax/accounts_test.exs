@@ -1,8 +1,12 @@
 defmodule Moulax.AccountsTest do
   use Moulax.DataCase, async: true
 
+  import Ecto.Query
+
   alias Moulax.Accounts
   alias Moulax.Accounts.Account
+  alias Moulax.Imports.Import
+  alias Moulax.Repo
 
   describe "list_accounts/0" do
     test "returns only non-archived accounts" do
@@ -30,6 +34,24 @@ defmodule Moulax.AccountsTest do
       assert account.balance == "100"
       assert account.transaction_count == 0
       assert account.last_import_at == nil
+    end
+
+    test "formats completed import timestamp and nil initial_balance fallback" do
+      account = insert_account(%{name: "Raw", bank: "b", type: "checking"})
+
+      Repo.update_all(
+        from(a in Account, where: a.id == ^account.id),
+        set: [initial_balance: nil]
+      )
+
+      %Import{}
+      |> Import.changeset(%{account_id: account.id, filename: "x.csv", status: "completed"})
+      |> Repo.insert!()
+
+      [listed] = Accounts.list_accounts()
+      assert listed.initial_balance == "0.00"
+      assert listed.last_import_at =~ "T"
+      assert String.ends_with?(listed.last_import_at, "Z")
     end
   end
 

@@ -54,6 +54,18 @@ defmodule Moulax.Categories.RulesTest do
       assert {:error, changeset} = Rules.create_rule(%{})
       assert %{keyword: [_], category_id: [_]} = errors_on(changeset)
     end
+
+    test "returns fully formatted category payload" do
+      cat = insert_category(%{name: "Utilities", color: "#0ea5e9"})
+
+      assert {:ok, rule} = Rules.create_rule(%{keyword: "EDF", category_id: cat.id, priority: 7})
+
+      assert rule.keyword == "EDF"
+      assert rule.priority == 7
+      assert rule.category.id == cat.id
+      assert rule.category.name == "Utilities"
+      assert rule.category.color == "#0ea5e9"
+    end
   end
 
   describe "update_rule/2" do
@@ -64,6 +76,58 @@ defmodule Moulax.Categories.RulesTest do
       assert {:ok, updated} = Rules.update_rule(rule, %{keyword: "TGV", priority: 20})
       assert updated.keyword == "TGV"
       assert updated.priority == 20
+    end
+
+    test "returns changeset error when data is invalid" do
+      cat = insert_category(%{name: "Transport", color: "#3b82f6"})
+      rule = insert_rule(%{keyword: "SNCF", category_id: cat.id, priority: 5})
+
+      assert {:error, changeset} = Rules.update_rule(rule, %{keyword: nil})
+      assert %{keyword: [_]} = errors_on(changeset)
+    end
+
+    test "can reassign category and returns updated category payload" do
+      from_cat = insert_category(%{name: "Food", color: "#22c55e"})
+      to_cat = insert_category(%{name: "Health", color: "#ef4444"})
+      rule = insert_rule(%{keyword: "PHARMACY", category_id: from_cat.id, priority: 3})
+
+      assert {:ok, updated} = Rules.update_rule(rule, %{category_id: to_cat.id, priority: 9})
+
+      assert updated.priority == 9
+      assert updated.category.id == to_cat.id
+      assert updated.category.name == "Health"
+      assert updated.category.color == "#ef4444"
+    end
+
+    test "updates only keyword and keeps category payload preloaded" do
+      cat = insert_category(%{name: "Bills", color: "#64748b"})
+      rule = insert_rule(%{keyword: "EDF", category_id: cat.id, priority: 1})
+
+      assert {:ok, updated} = Rules.update_rule(rule, %{keyword: "ENGIE"})
+
+      assert updated.keyword == "ENGIE"
+      assert updated.category.id == cat.id
+      assert updated.category.name == "Bills"
+      assert updated.category.color == "#64748b"
+    end
+  end
+
+  describe "get_rule/1" do
+    test "returns formatted rule with category when found" do
+      cat = insert_category(%{name: "Phone", color: "#8b5cf6"})
+      rule = insert_rule(%{keyword: "FREE", category_id: cat.id, priority: 4})
+
+      assert {:ok, got} = Rules.get_rule(rule.id)
+      assert got.id == rule.id
+      assert got.keyword == "FREE"
+      assert got.priority == 4
+      assert got.category.id == cat.id
+      assert got.category.name == "Phone"
+      assert got.category.color == "#8b5cf6"
+    end
+
+    test "returns not_found when missing" do
+      assert {:error, :not_found} = Rules.get_rule(Ecto.UUID.generate())
     end
   end
 
@@ -78,6 +142,14 @@ defmodule Moulax.Categories.RulesTest do
 
     test "returns not_found when id does not exist" do
       assert {:error, :not_found} = Rules.delete_rule(Ecto.UUID.generate())
+    end
+
+    test "deletes by struct" do
+      cat = insert_category(%{name: "Other", color: "#6b7280"})
+      rule = insert_rule(%{keyword: "Y", category_id: cat.id, priority: 0})
+
+      assert {:ok, _} = Rules.delete_rule(rule)
+      assert Rules.list_rules() == []
     end
   end
 

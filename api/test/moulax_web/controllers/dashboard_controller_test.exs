@@ -194,6 +194,28 @@ defmodule MoulaxWeb.DashboardControllerTest do
       assert Decimal.equal?(Decimal.new(data["total_income"]), Decimal.new("0"))
       assert data["by_category"] == []
     end
+
+    test "uses current month when month is not provided", %{conn: conn} do
+      account = insert_account()
+      {year, month} = current_year_month()
+      current_date = date_string(year, month, 10)
+
+      insert_transaction(%{
+        account_id: account.id,
+        date: Date.from_iso8601!(current_date),
+        label: "Current month expense",
+        amount: Decimal.new("-42.00")
+      })
+
+      data =
+        conn
+        |> get("/api/v1/dashboard/spending")
+        |> json_response(200)
+
+      expected_month = "#{year}-#{String.pad_leading(Integer.to_string(month), 2, "0")}"
+      assert data["month"] == expected_month
+      assert Decimal.equal?(Decimal.new(data["total_expenses"]), Decimal.new("-42.00"))
+    end
   end
 
   # ---------------------------------------------------------------------------
@@ -299,6 +321,35 @@ defmodule MoulaxWeb.DashboardControllerTest do
       [month] = data["months"]
       assert Decimal.equal?(Decimal.new(month["income"]), Decimal.new("500.00"))
     end
+
+    test "falls back to default month count for invalid months param", %{conn: conn} do
+      data =
+        conn
+        |> get("/api/v1/dashboard/trends?months=not-a-number")
+        |> json_response(200)
+
+      assert length(data["months"]) == 12
+    end
+
+    test "accepts integer months when action is called directly", %{conn: conn} do
+      data =
+        conn
+        |> MoulaxWeb.DashboardController.trends(%{"months" => 2})
+        |> json_response(200)
+
+      assert length(data["months"]) == 2
+    end
+
+    test "falls back for non-integer non-binary months when action is called directly", %{
+      conn: conn
+    } do
+      data =
+        conn
+        |> MoulaxWeb.DashboardController.trends(%{"months" => %{}})
+        |> json_response(200)
+
+      assert length(data["months"]) == 12
+    end
   end
 
   # ---------------------------------------------------------------------------
@@ -392,6 +443,31 @@ defmodule MoulaxWeb.DashboardControllerTest do
 
       assert length(data["expenses"]) == 1
       assert hd(data["expenses"])["label"] == "Real expense"
+    end
+
+    test "uses defaults when month and limit are invalid or missing", %{conn: conn} do
+      account = insert_account(%{name: "Defaults"})
+      {year, month} = current_year_month()
+
+      for day <- 1..6 do
+        amount = Decimal.new("-#{day * 10}")
+
+        insert_transaction(%{
+          account_id: account.id,
+          date: Date.from_iso8601!(date_string(year, month, day)),
+          label: "Expense #{day}",
+          amount: amount
+        })
+      end
+
+      data =
+        conn
+        |> get("/api/v1/dashboard/top-expenses?limit=invalid")
+        |> json_response(200)
+
+      expected_month = "#{year}-#{String.pad_leading(Integer.to_string(month), 2, "0")}"
+      assert data["month"] == expected_month
+      assert length(data["expenses"]) == 5
     end
   end
 
