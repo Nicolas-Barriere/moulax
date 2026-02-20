@@ -739,10 +739,11 @@ function ImportResultsTable({ rows }: { rows: ImportRowDetail[] }) {
               <button
                 key={opt.value}
                 onClick={() => setFilter(opt.value)}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${filter === opt.value
+                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                  filter === opt.value
                     ? "bg-primary/15 text-primary"
                     : "text-muted hover:bg-muted/10 hover:text-foreground"
-                  }`}
+                }`}
               >
                 {opt.label}
                 <span className="ml-1 tabular-nums opacity-70">{count}</span>
@@ -774,8 +775,9 @@ function ImportResultsTable({ rows }: { rows: ImportRowDetail[] }) {
               return (
                 <tr
                   key={row.row}
-                  className={`border-b border-border/50 transition-colors hover:bg-muted/5 ${row.status === "error" ? "bg-danger/[0.03]" : ""
-                    }`}
+                  className={`border-b border-border/50 transition-colors hover:bg-muted/5 ${
+                    row.status === "error" ? "bg-danger/[0.03]" : ""
+                  }`}
                 >
                   <td className="px-3 py-2 text-center font-mono text-xs text-muted/70">
                     {row.row}
@@ -790,8 +792,9 @@ function ImportResultsTable({ rows }: { rows: ImportRowDetail[] }) {
                     )}
                   </td>
                   <td
-                    className={`whitespace-nowrap px-3 py-2 text-right font-mono text-xs font-medium tabular-nums ${isNegative ? "text-danger" : "text-success"
-                      }`}
+                    className={`whitespace-nowrap px-3 py-2 text-right font-mono text-xs font-medium tabular-nums ${
+                      isNegative ? "text-danger" : "text-success"
+                    }`}
                   >
                     {isNegative ? "" : "+"}{formatAmount(amount)}
                   </td>
