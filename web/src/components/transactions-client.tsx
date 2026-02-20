@@ -56,16 +56,10 @@ import {
   bulkTagTransactions,
   createTransaction,
 } from "@/app/actions/transactions";
+import { TransactionAmount } from "@/components/transaction-amount";
 import type { Transaction, Account, Tag, PaginatedResponse } from "@/types";
 
 /* ── Helpers ─────────────────────────────────────────── */
-
-function formatAmount(amount: string, currency = "EUR"): string {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency,
-  }).format(parseFloat(amount));
-}
 
 function formatDate(iso: string): string {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -93,6 +87,8 @@ interface TransactionsClientProps {
   };
 }
 
+const ALL_FILTER_VALUE = "__all__";
+
 /* ── Main Component ──────────────────────────────────── */
 
 export function TransactionsClient({
@@ -118,6 +114,14 @@ export function TransactionsClient({
 
   const transactions = initialData.data;
   const meta = initialData.meta;
+  const selectedAccountLabel = accountFilter
+    ? (accounts.find((a) => a.id === accountFilter)?.name ?? "Compte inconnu")
+    : "Tous les comptes";
+  const selectedTagLabel = tagFilter
+    ? tagFilter === "untagged"
+      ? "Non tagué"
+      : (tags.find((t) => t.id === tagFilter)?.name ?? "Tag inconnu")
+    : "Tous les tags";
 
   /* Local state */
   const [searchInput, setSearchInput] = useState(search);
@@ -127,6 +131,11 @@ export function TransactionsClient({
   const [addOpen, setAddOpen] = useState(false);
   const [bulkTagId, setBulkTagId] = useState("");
   const [bulkPending, startBulkTransition] = useTransition();
+  const selectedBulkTagLabel = bulkTagId
+    ? bulkTagId === "untagged"
+      ? "Aucun tag"
+      : (tags.find((t) => t.id === bulkTagId)?.name ?? "Tag inconnu")
+    : "Choisir un tag";
   const [sorting, setSorting] = useState<SortingState>([
     { id: sortBy, desc: sortOrder === "desc" },
   ]);
@@ -350,16 +359,8 @@ export function TransactionsClient({
       ),
       cell: ({ row }) => {
         const tx = row.original;
-        const amt = parseFloat(tx.amount);
         return (
-          <div
-            className={`whitespace-nowrap text-right font-medium tabular-nums ${
-              amt >= 0 ? "text-success" : "text-danger"
-            }`}
-          >
-            {amt >= 0 ? "+" : ""}
-            {formatAmount(tx.amount, tx.currency)}
-          </div>
+          <TransactionAmount amount={tx.amount} currency={tx.currency} />
         );
       },
     },
@@ -428,27 +429,32 @@ export function TransactionsClient({
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="relative min-w-[200px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative h-8 min-w-[200px] flex-1">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <Search className="h-4 w-4 text-muted-foreground" />
+          </div>
           <Input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Rechercher un libellé..."
-            className="pl-9 shadow-none"
+            className="h-full pl-9 shadow-none"
           />
         </div>
 
         <Select
-          value={accountFilter || "_all"}
+          value={accountFilter || ALL_FILTER_VALUE}
           onValueChange={(v) =>
-            updateParams({ account: v === "_all" ? null : v, page: null })
+            updateParams({
+              account: !v || v === ALL_FILTER_VALUE ? null : v,
+              page: null,
+            })
           }
         >
           <SelectTrigger className="w-44 shadow-none">
-            <SelectValue placeholder="Tous les comptes" />
+            <SelectValue>{selectedAccountLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="_all">Tous les comptes</SelectItem>
+            <SelectItem value={ALL_FILTER_VALUE}>Tous les comptes</SelectItem>
             {accounts.map((a) => (
               <SelectItem key={a.id} value={a.id}>
                 {a.name}
@@ -458,16 +464,19 @@ export function TransactionsClient({
         </Select>
 
         <Select
-          value={tagFilter || "_all"}
+          value={tagFilter || ALL_FILTER_VALUE}
           onValueChange={(v) =>
-            updateParams({ tag: v === "_all" ? null : v, page: null })
+            updateParams({
+              tag: !v || v === ALL_FILTER_VALUE ? null : v,
+              page: null,
+            })
           }
         >
           <SelectTrigger className="w-40 shadow-none">
-            <SelectValue placeholder="Tous les tags" />
+            <SelectValue>{selectedTagLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="_all">Tous les tags</SelectItem>
+            <SelectItem value={ALL_FILTER_VALUE}>Tous les tags</SelectItem>
             <SelectItem value="untagged">Non tagué</SelectItem>
             {tags.map((t) => (
               <SelectItem key={t.id} value={t.id}>
@@ -525,7 +534,7 @@ export function TransactionsClient({
               onValueChange={(value) => setBulkTagId(value ?? "")}
             >
               <SelectTrigger className="h-8 w-44 text-sm">
-                <SelectValue placeholder="Choisir un tag" />
+                <SelectValue>{selectedBulkTagLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="untagged">Aucun tag</SelectItem>

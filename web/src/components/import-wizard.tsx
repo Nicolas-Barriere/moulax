@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useRef, useMemo, type DragEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api";
-import { BANK_LABELS } from "@/components/account-form";
+import { BANK_LABELS } from "@/lib/account-metadata";
 import { Button } from "@/components/ui/button";
+import { AccountForm, type AccountFormData } from "@/components/account-form";
 import {
   Select,
   SelectContent,
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { createAccount } from "@/app/actions/accounts";
 import type { Account, Import, ImportRowDetail, ImportRowStatus } from "@/types";
 
 /* ── Helpers ─────────────────────────────────────────── */
@@ -64,12 +65,14 @@ interface ImportWizardProps {
 }
 
 export function ImportWizard({ accounts }: ImportWizardProps) {
-  const router = useRouter();
-
+  const wizardTopRef = useRef<HTMLDivElement>(null);
+  const [availableAccounts, setAvailableAccounts] = useState<Account[]>(accounts);
   const [step, setStep] = useState<Step>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [detecting, setDetecting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [creatingAccount, setCreatingAccount] = useState(false);
+  const [createAccountOpen, setCreateAccountOpen] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [detectedBank, setDetectedBank] = useState<string | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
@@ -77,6 +80,13 @@ export function ImportWizard({ accounts }: ImportWizardProps) {
   const [importError, setImportError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectableAccounts = detectedBank
+    ? availableAccounts.filter((a) => a.bank === detectedBank)
+    : availableAccounts;
+  const selectedAccountLabel = selectedAccountId
+    ? (selectableAccounts.find((a) => a.id === selectedAccountId)?.name ??
+      "Compte inconnu")
+    : "Sélectionnez un compte…";
 
   /* ── File handling + bank detection ────────────────── */
 
@@ -105,11 +115,11 @@ export function ImportWizard({ accounts }: ImportWizardProps) {
       const bank = res.data.detected_bank;
       setDetectedBank(bank);
 
-      const matching = accounts.filter((a) => a.bank === bank);
+      const matching = availableAccounts.filter((a) => a.bank === bank);
 
       if (matching.length === 0) {
         toast.info("Aucun compte trouvé pour cette banque. Veuillez le créer.");
-        router.push(`/accounts/new?bank=${bank}`);
+        setCreateAccountOpen(true);
       } else if (matching.length === 1) {
         // Auto-select and upload immediately
         const accountId = matching[0].id;
@@ -128,6 +138,33 @@ export function ImportWizard({ accounts }: ImportWizardProps) {
       }
     } finally {
       setDetecting(false);
+    }
+  }
+
+  async function handleCreateAccount(data: AccountFormData) {
+    try {
+      setCreatingAccount(true);
+      const result = await createAccount(data);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      if (!result.data) {
+        toast.error("Impossible de créer le compte");
+        return;
+      }
+
+      const createdAccount = result.data;
+      setAvailableAccounts((prev) => [...prev, createdAccount]);
+      setSelectedAccountId(createdAccount.id);
+      setCreateAccountOpen(false);
+      toast.success("Compte créé avec succès");
+
+      if (file) {
+        await executeUpload(file, createdAccount.id);
+      }
+    } finally {
+      setCreatingAccount(false);
     }
   }
 
@@ -187,8 +224,27 @@ export function ImportWizard({ accounts }: ImportWizardProps) {
   ];
   const currentIndex = STEPS.findIndex((s) => s.key === step);
 
+  function scrollToImportTop() {
+    const main = document.querySelector("main");
+    if (main instanceof HTMLElement) {
+      main.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function resetToUploadStep() {
+    setFile(null);
+    setImportResult(null);
+    setImportError(null);
+    setDetectedBank(null);
+    setStep("upload");
+    requestAnimationFrame(scrollToImportTop);
+    setTimeout(scrollToImportTop, 60);
+  }
+
   return (
-    <div className="space-y-6">
+    <div ref={wizardTopRef} className="space-y-6">
       {/* Stepper */}
       <div className="flex items-center gap-2">
         {STEPS.map((s, i) => {
@@ -459,13 +515,10 @@ export function ImportWizard({ accounts }: ImportWizardProps) {
             onValueChange={(value) => setSelectedAccountId(value ?? "")}
           >
             <SelectTrigger id="account-select">
-              <SelectValue placeholder="Sélectionnez un compte…" />
+              <SelectValue>{selectedAccountLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {(detectedBank
-                ? accounts.filter((a) => a.bank === detectedBank)
-                : accounts
-              ).map((a) => (
+              {selectableAccounts.map((a) => (
                 <SelectItem key={a.id} value={a.id}>
                   {a.name} — {BANK_LABELS[a.bank] ?? a.bank} ({a.currency})
                 </SelectItem>
@@ -501,23 +554,18 @@ export function ImportWizard({ accounts }: ImportWizardProps) {
         <ResultsStep
           result={importResult}
           accountId={selectedAccountId}
-          onImportAnother={() => {
-            setFile(null);
-            setImportResult(null);
-            setImportError(null);
-            setDetectedBank(null);
-            setStep("upload");
-          }}
-          onNewAccount={() => {
-            setFile(null);
-            setImportResult(null);
-            setImportError(null);
-            setDetectedBank(null);
-            setSelectedAccountId("");
-            setStep("upload");
-          }}
+          onImportAnother={resetToUploadStep}
         />
       )}
+
+      <AccountForm
+        key={`import-create-${createAccountOpen ? "open" : "closed"}-${detectedBank ?? "none"}`}
+        open={createAccountOpen}
+        loading={creatingAccount}
+        initialBank={detectedBank ?? undefined}
+        onSubmit={handleCreateAccount}
+        onClose={() => setCreateAccountOpen(false)}
+      />
     </div>
   );
 }
@@ -528,12 +576,10 @@ function ResultsStep({
   result,
   accountId,
   onImportAnother,
-  onNewAccount,
 }: {
   result: Import;
   accountId: string;
   onImportAnother: () => void;
-  onNewAccount: () => void;
 }) {
   const isFailed = result.status === "failed";
   const hasErrors =
@@ -622,24 +668,18 @@ function ResultsStep({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {!isFailed && (
           <Link
             href={`/accounts/${accountId}`}
-            className="flex items-center gap-2 bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex h-9 items-center gap-2 bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Voir les transactions
           </Link>
         )}
-        <Button variant="outline" onClick={onImportAnother}>
+        <Button variant="outline" className="h-9" onClick={onImportAnother}>
           Importer un autre fichier
         </Button>
-        <button
-          onClick={onNewAccount}
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          Changer de compte
-        </button>
       </div>
     </div>
   );

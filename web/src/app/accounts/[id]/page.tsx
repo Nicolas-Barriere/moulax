@@ -2,13 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { serverApi } from "@/lib/server-api";
 import { AccountActions, BalanceEditor } from "@/components/account-detail-client";
+import { TransactionAmount } from "@/components/transaction-amount";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Upload } from "lucide-react";
 import {
   BANK_LABELS,
-  TYPE_LABELS,
-  TYPE_BADGE_VARIANT,
-} from "@/components/account-form";
+  getAccountTypeBadgeClass,
+  getAccountTypeBadgeVariant,
+  getAccountTypeLabel,
+} from "@/lib/account-metadata";
+import { cn } from "@/lib/utils";
 import type { Account, Transaction, Import, PaginatedResponse } from "@/types";
 
 /* ── Helpers ─────────────────────────────────────────── */
@@ -99,10 +102,10 @@ export default async function AccountDetailPage({
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <Badge
-                variant={TYPE_BADGE_VARIANT[account.type] ?? "secondary"}
-                className="text-sm"
+                variant={getAccountTypeBadgeVariant(account.type)}
+                className={cn("text-sm", getAccountTypeBadgeClass(account.type))}
               >
-                {TYPE_LABELS[account.type] ?? account.type}
+                {getAccountTypeLabel(account.type)}
               </Badge>
               <span className="text-xs text-muted-foreground">
                 {BANK_LABELS[account.bank] ?? account.bank}
@@ -170,7 +173,6 @@ export default async function AccountDetailPage({
               </thead>
               <tbody>
                 {transactions.map((tx) => {
-                  const amt = parseFloat(tx.amount);
                   return (
                     <tr
                       key={tx.id}
@@ -204,13 +206,11 @@ export default async function AccountDetailPage({
                           <span className="text-muted-foreground/50">—</span>
                         )}
                       </td>
-                      <td
-                        className={`whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums ${
-                          amt >= 0 ? "text-success" : "text-danger"
-                        }`}
-                      >
-                        {amt >= 0 ? "+" : ""}
-                        {formatAmount(tx.amount, tx.currency)}
+                      <td className="px-4 py-3 text-right">
+                        <TransactionAmount
+                          amount={tx.amount}
+                          currency={tx.currency}
+                        />
                       </td>
                     </tr>
                   );

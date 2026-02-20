@@ -2,12 +2,14 @@ import Link from "next/link";
 import { serverApi } from "@/lib/server-api";
 import { AccountsClient } from "@/components/accounts-client";
 import { Badge } from "@/components/ui/badge";
-import type { Account } from "@/types";
 import {
   BANK_LABELS,
-  TYPE_LABELS,
-  TYPE_BADGE_VARIANT,
-} from "@/components/account-form";
+  getAccountTypeBadgeClass,
+  getAccountTypeBadgeVariant,
+  getAccountTypeLabel,
+} from "@/lib/account-metadata";
+import { cn } from "@/lib/utils";
+import type { Account } from "@/types";
 
 /* ── Helpers ─────────────────────────────────────────── */
 
@@ -87,10 +89,10 @@ function AccountCard({ account }: { account: Account }) {
     >
       <div className="mb-3 flex items-center justify-between">
         <Badge
-          variant={TYPE_BADGE_VARIANT[account.type] ?? "secondary"}
-          className="text-sm"
+          variant={getAccountTypeBadgeVariant(account.type)}
+          className={cn("text-sm", getAccountTypeBadgeClass(account.type))}
         >
-          {TYPE_LABELS[account.type] ?? account.type}
+          {getAccountTypeLabel(account.type)}
         </Badge>
         <span className="text-xs text-muted-foreground">
           {BANK_LABELS[account.bank] ?? account.bank}

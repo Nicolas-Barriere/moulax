@@ -19,43 +19,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { BadgeProps } from "@/components/ui/badge";
+import {
+  BANKS,
+  BANK_LABELS,
+  ACCOUNT_TYPES,
+  TYPE_LABELS,
+  TYPE_BADGE_VARIANT,
+  TYPE_BADGE_STYLES,
+  getAccountTypeLabel,
+} from "@/lib/account-metadata";
 
 /* ── Shared constants ────────────────────────────────── */
 
-export const BANKS: { value: string; label: string }[] = [
-  { value: "boursorama", label: "Boursorama" },
-  { value: "revolut", label: "Revolut" },
-  { value: "caisse_depargne", label: "Caisse d'Épargne" },
-];
-
-export const BANK_LABELS: Record<string, string> = Object.fromEntries(
-  BANKS.map((b) => [b.value, b.label]),
-);
-
-export const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
-  { value: "checking", label: "Courant" },
-  { value: "savings", label: "Épargne" },
-  { value: "brokerage", label: "Bourse" },
-  { value: "crypto", label: "Crypto" },
-];
-
-export const TYPE_LABELS: Record<string, string> = Object.fromEntries(
-  ACCOUNT_TYPES.map((t) => [t.value, t.label]),
-);
-
-export const TYPE_BADGE_VARIANT: Record<string, BadgeProps["variant"]> = {
-  checking: "default",
-  savings: "success",
-  brokerage: "warning",
-  crypto: "secondary",
-};
-
-export const TYPE_BADGE_STYLES: Record<string, string> = {
-  checking: "bg-primary/15 text-primary",
-  savings: "bg-success/15 text-success",
-  brokerage: "bg-warning/15 text-warning",
-  crypto: "bg-purple-500/15 text-purple-400",
+export {
+  BANKS,
+  BANK_LABELS,
+  ACCOUNT_TYPES,
+  TYPE_LABELS,
+  TYPE_BADGE_VARIANT,
+  TYPE_BADGE_STYLES,
 };
 
 /* ── Form types ──────────────────────────────────────── */
@@ -107,6 +89,10 @@ export function AccountForm({
   const [errors, setErrors] = useState<
     Partial<Record<keyof AccountFormData, string>>
   >({});
+  const selectedBankLabel = form.bank
+    ? (BANK_LABELS[form.bank] ?? form.bank)
+    : "Sélectionner une banque";
+  const selectedTypeLabel = getAccountTypeLabel(form.type);
 
   function validate(): boolean {
     const newErrors: Partial<Record<keyof AccountFormData, string>> = {};
@@ -154,7 +140,7 @@ export function AccountForm({
               onValueChange={(v) => setForm({ ...form, bank: v ?? "" })}
             >
               <SelectTrigger className={errors.bank ? "border-destructive" : ""}>
-                <SelectValue placeholder="Sélectionner une banque" />
+                <SelectValue>{selectedBankLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {BANKS.map((b) => (
@@ -178,7 +164,7 @@ export function AccountForm({
               }
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>{selectedTypeLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {ACCOUNT_TYPES.map((t) => (
