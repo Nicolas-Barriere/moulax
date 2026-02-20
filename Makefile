@@ -11,7 +11,7 @@ setup: ## Build and start all services for the first time
 	docker compose build
 	docker compose up -d
 	@echo ""
-	@echo "✓ Moulax is starting up!"
+	@echo "✓ Pactole is starting up!"
 	@echo "  Frontend:  http://localhost:$${WEB_PORT:-3005}"
 	@echo "  Backend:   http://localhost:$${BACKEND_PORT:-4001}"
 	@echo "  Database:  localhost:$${DB_PORT:-5434}"
@@ -23,7 +23,7 @@ setup: ## Build and start all services for the first time
 dev: ## Start all services (build if needed)
 	docker compose up -d --build
 	@echo ""
-	@echo "✓ Moulax is running!"
+	@echo "✓ Pactole is running!"
 	@echo "  Frontend:  http://localhost:$${WEB_PORT:-3005}"
 	@echo "  Backend:   http://localhost:$${BACKEND_PORT:-4001}"
 
@@ -78,7 +78,7 @@ shell.web: ## Open a shell in the frontend container
 	docker compose exec web sh
 
 shell.db: ## Open psql in the database container
-	docker compose exec db psql -U postgres -d moulax_dev
+	docker compose exec db psql -U postgres -d pactole_dev
 
 # ── Cleanup ───────────────────────────────────────────────
 

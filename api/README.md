@@ -1,4 +1,4 @@
-# Moulax
+# Pactole — Backend
 
 To start your Phoenix server:
 
