@@ -1,8 +1,8 @@
-# Moulax
+# Pactole
 
 > Know where your money is. One dashboard, all accounts, zero fluff.
 
-Moulax is a self-hosted personal finance aggregator for tracking money across multiple bank accounts. Import CSV statements from your banks, categorize transactions, and see where your money goes — all in one clean dashboard.
+Pactole is a self-hosted personal finance aggregator for tracking money across multiple bank accounts. Import CSV statements from your banks, categorize transactions, and see where your money goes — all in one clean dashboard.
 
 ## Tech Stack
 
@@ -23,8 +23,8 @@ Moulax is a self-hosted personal finance aggregator for tracking money across mu
 
 ```bash
 # Clone the repo
-git clone https://github.com/Nicolas-Barriere/moulax.git
-cd moulax
+git clone https://github.com/Nicolas-Barriere/pactole.git
+cd pactole
 
 # (Optional) Copy and adjust port config if defaults conflict
 cp .env.example .env
@@ -74,7 +74,7 @@ If you prefer running services natively:
 
 **Backend (Elixir):**
 ```bash
-cd backend
+cd api
 mix deps.get
 mix ecto.setup        # requires PostgreSQL running locally
 mix phx.server        # starts on port 4000
@@ -90,8 +90,8 @@ pnpm dev              # starts on port 3000
 ## Project Structure
 
 ```
-moulax/
-├── backend/              # Elixir Phoenix API
+pactole/
+├── api/                  # Elixir Phoenix API
 │   ├── lib/
 │   │   ├── moulax/       # Business logic (contexts)
 │   │   └── moulax_web/   # HTTP layer (controllers, router)
