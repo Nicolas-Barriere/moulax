@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { serverApi } from "@/lib/server-api";
 import { DashboardCharts } from "@/components/dashboard-charts";
+import { BANK_LABELS } from "@/lib/account-metadata";
 import type {
   DashboardSummary,
   DashboardSpending,
@@ -141,7 +142,7 @@ export default async function DashboardPage({
                       {account.name}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {account.bank}
+                      {BANK_LABELS[account.bank] ?? account.bank}
                     </p>
                   </div>
                 </div>
