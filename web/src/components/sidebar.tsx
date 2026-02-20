@@ -28,8 +28,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -118,11 +116,11 @@ export function Sidebar() {
             className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Basculer le thème"
           >
-            {mounted && (resolvedTheme === "dark" ? (
+            {resolvedTheme === "dark" ? (
               <Sun className="h-4 w-4" />
             ) : (
               <Moon className="h-4 w-4" />
-            ))}
+            )}
           </button>
         </div>
       </aside>
