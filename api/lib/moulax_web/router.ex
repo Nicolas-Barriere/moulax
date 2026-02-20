@@ -20,6 +20,7 @@ defmodule MoulaxWeb.Router do
     resources "/transactions", TransactionController, only: [:show, :update, :delete]
 
     resources "/imports", ImportController, only: [:show]
+    post "/imports/detect", ImportController, :detect
 
     resources "/tagging-rules", TaggingRuleController, except: [:new, :edit]
     post "/tagging-rules/apply", TaggingRuleController, :apply_rules
