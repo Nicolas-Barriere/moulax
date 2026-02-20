@@ -429,13 +429,15 @@ export function TransactionsClient({
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="relative min-w-[200px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative h-8 min-w-[200px] flex-1">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <Search className="h-4 w-4 text-muted-foreground" />
+          </div>
           <Input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Rechercher un libellé..."
-            className="pl-9 shadow-none"
+            className="h-full pl-9 shadow-none"
           />
         </div>
 
