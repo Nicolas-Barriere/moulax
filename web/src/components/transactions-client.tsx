@@ -56,16 +56,10 @@ import {
   bulkTagTransactions,
   createTransaction,
 } from "@/app/actions/transactions";
+import { TransactionAmount } from "@/components/transaction-amount";
 import type { Transaction, Account, Tag, PaginatedResponse } from "@/types";
 
 /* ── Helpers ─────────────────────────────────────────── */
-
-function formatAmount(amount: string, currency = "EUR"): string {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency,
-  }).format(parseFloat(amount));
-}
 
 function formatDate(iso: string): string {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -365,16 +359,8 @@ export function TransactionsClient({
       ),
       cell: ({ row }) => {
         const tx = row.original;
-        const amt = parseFloat(tx.amount);
         return (
-          <div
-            className={`whitespace-nowrap text-right font-medium tabular-nums ${
-              amt >= 0 ? "text-success" : "text-danger"
-            }`}
-          >
-            {amt >= 0 ? "+" : ""}
-            {formatAmount(tx.amount, tx.currency)}
-          </div>
+          <TransactionAmount amount={tx.amount} currency={tx.currency} />
         );
       },
     },

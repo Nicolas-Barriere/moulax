@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api";
-import { BANK_LABELS } from "@/components/account-form";
+import { BANK_LABELS } from "@/lib/account-metadata";
 import { Button } from "@/components/ui/button";
 import {
   Select,
