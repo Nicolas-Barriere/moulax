@@ -491,6 +491,7 @@ function TransactionsContent() {
                     align="right"
                   />
                   <th className="px-4 py-3 font-medium">Compte</th>
+                  <th className="w-10 px-4 py-3" />
                 </tr>
               </thead>
               <tbody>
@@ -542,6 +543,9 @@ function TransactionsContent() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-muted">
                         {tx.account?.name ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <SourceCell source={tx.source} importId={tx.import_id} />
                       </td>
                     </tr>
                   );
@@ -884,6 +888,41 @@ function PageSkeleton() {
   );
 }
 
+/* ── Source indicator ────────────────────────────────── */
+
+function SourceCell({
+  source,
+  importId,
+}: {
+  source: string;
+  importId: string | null;
+}) {
+  if (source === "manual") {
+    return (
+      <span title="Saisie manuelle" className="flex justify-center text-muted">
+        <PencilIcon className="h-3.5 w-3.5" />
+      </span>
+    );
+  }
+
+  if (importId) {
+    return (
+      <span title="Import CSV" className="flex justify-center text-primary/60">
+        <DocumentIcon className="h-3.5 w-3.5" />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      title="Import CSV (origine inconnue)"
+      className="flex justify-center text-muted/40"
+    >
+      <DocumentIcon className="h-3.5 w-3.5" />
+    </span>
+  );
+}
+
 /* ── Icons ────────────────────────────────────────────── */
 
 function PlusIcon({ className }: { className?: string }) {
@@ -1025,6 +1064,42 @@ function CheckAnimIcon({ className }: { className?: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="m4.5 12.75 6 6 9-13.5"
+      />
+    </svg>
+  );
+}
+
+function PencilIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+      />
+    </svg>
+  );
+}
+
+function DocumentIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
       />
     </svg>
   );

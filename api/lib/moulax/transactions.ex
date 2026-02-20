@@ -297,6 +297,7 @@ defmodule Moulax.Transactions do
       id: tx.id,
       account_id: tx.account_id,
       account: account_ref(tx.account),
+      import_id: tx.import_id,
       date: Date.to_iso8601(tx.date),
       label: tx.label,
       original_label: tx.original_label,

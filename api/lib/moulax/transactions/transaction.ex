@@ -7,11 +7,13 @@ defmodule Moulax.Transactions.Transaction do
   import Ecto.Changeset
 
   alias Moulax.Accounts.Account
+  alias Moulax.Imports.Import
   alias Moulax.Tags.Tag
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t(),
           account_id: Ecto.UUID.t(),
+          import_id: Ecto.UUID.t() | nil,
           date: Date.t(),
           label: String.t(),
           original_label: String.t(),
@@ -35,13 +37,14 @@ defmodule Moulax.Transactions.Transaction do
     field :source, :string
 
     belongs_to :account, Account
+    belongs_to :import, Import
     many_to_many :tags, Tag, join_through: "transaction_tags"
 
     timestamps()
   end
 
   @required_fields [:account_id, :date, :label, :original_label, :amount, :source]
-  @optional_fields [:currency, :bank_reference]
+  @optional_fields [:currency, :bank_reference, :import_id]
 
   @doc false
   def changeset(transaction, attrs) do

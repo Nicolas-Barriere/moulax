@@ -38,6 +38,7 @@ export interface Transaction {
   id: string;
   account_id: string;
   account: AccountRef | null;
+  import_id: string | null;
   date: string;
   label: string;
   original_label: string;
